@@ -3,8 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
-import requests
-import json
+import openai # Added openai import
 from typing import List
 import os
 import tempfile
@@ -63,20 +62,23 @@ def split_text_into_segments(text: str, max_length: int = 4000) -> List[str]:
     return segments
 
 def call_openai_api(segment: str, api_key: str, voice: str) -> bytes:
-    url = "https://api.openai.com/v1/audio/speech"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "model": "tts-1",
-        "input": segment,
-        "voice": voice
-    }
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=f"OpenAI API error: {response.text}")
-    return response.content
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        response = client.audio.speech.create(
+            model="gpt-4o-mini-tts",
+            voice=voice,
+            input=segment
+        )
+        # The response object has a read() method to get the audio bytes
+        audio_bytes = response.read()
+        return audio_bytes
+    except openai.APIError as e:
+        # Handle OpenAI API errors more specifically
+        raise HTTPException(status_code=e.status_code if hasattr(e, 'status_code') else 500, detail=str(e))
+    except Exception as e:
+        # Catch any other unexpected errors
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred with the OpenAI API: {str(e)}")
+
 
 def merge_audio_files(audio_files: List[bytes], output_path: str) -> str:
     combined = AudioSegment.empty()
