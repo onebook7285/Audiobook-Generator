@@ -200,9 +200,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     var epubContent = e.target.result;
                     readEpub(epubContent);
                 };
-                reader.readAsBinaryString(file);
+                reader.readAsBinaryString(file); // JSZip in readEpub needs binary string
+            } else if (file.name.endsWith('.pdf')) {
+                // PDF files are primarily processed by the server for text extraction.
+                // This client-side check is to prevent the "unsupported file" alert.
+                // The text area is already cleared.
+                // The server's response from /upload-file (which includes extracted text for other types)
+                // is not directly handled here to populate textInput.value for PDFs.
+                // This function's role for TXT/EPUB is direct population. For PDF, it's just validation.
+                // For consistency, we can read the file, though it's not used to populate textInput here.
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    // The actual text for PDF will come from the server response
+                    // after form submission, not directly setting textInput.value here.
+                    // However, calculateCost might be relevant if based on file size or a temporary message.
+                    // For now, let's assume calculateCost might still be relevant or can be adjusted.
+                    calculateCost(); // This will calculate cost based on empty textInput or previous content.
+                                   // This might need further thought if cost should be delayed for PDFs.
+                };
+                reader.readAsArrayBuffer(file); // Reading as ArrayBuffer is typical for files to be sent to server.
             } else {
-                alert('Please upload a text or ePub file.');
+                alert('Please upload a .txt, .epub, or .pdf file.');
             }
         }
     }
