@@ -176,12 +176,15 @@ document.addEventListener('DOMContentLoaded', function () {
     textInput.addEventListener('input', calculateCost);
 
     function calculateCost() {
+        var textInput = document.getElementById('text-input');
         var textLength = textInput.value.length;
         var cost = (textLength / 1000) * 0.015;
         costDisplay.textContent = 'Estimated Cost for Conversion: $' + cost.toFixed(2);
     }
 
     function handleFileUpload(event) {
+        textInput.value = ''; // Clear the text area
+
         var file = event.target.files[0];
         if (file) {
             if (file.type === 'text/plain') {

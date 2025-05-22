@@ -11,6 +11,7 @@ import tempfile
 import io
 from pydub import AudioSegment
 import time
+from pdfminer.high_level import extract_text
 
 app = FastAPI()
 
@@ -118,6 +119,10 @@ def extract_text_from_epub(file_content: bytes) -> str:
             text_content.append(text)
     return "\n".join(text_content)
 
+def extract_text_from_pdf(file_content: bytes) -> str:
+    # Use io.BytesIO to treat the byte content as a file-like object
+    return extract_text(io.BytesIO(file_content))
+
 @app.post("/upload-file")
 async def upload_file(file: UploadFile = File(...), api_key: str = Form(...), voice: str = Form(...)):
     content = await file.read()
@@ -126,8 +131,11 @@ async def upload_file(file: UploadFile = File(...), api_key: str = Form(...), vo
         text = content.decode('utf-8')
     elif file.filename.endswith('.epub'):
         text = extract_text_from_epub(content)
+    elif file.filename.endswith('.pdf'): # New condition
+        text = extract_text_from_pdf(content) # Call to new function
     else:
-        raise HTTPException(status_code=400, detail="Unsupported file type. Only .txt and .epub files are supported.")
+        # Updated error message
+        raise HTTPException(status_code=400, detail="Unsupported file type. Only .txt, .epub, and .pdf files are supported.")
 
     segments = split_text_into_segments(text)
     audio_blobs = []
