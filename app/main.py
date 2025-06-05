@@ -9,7 +9,7 @@ import os
 import tempfile
 import io
 from pydub import AudioSegment
-import time
+import asyncio
 from pdfminer.high_level import extract_text
 
 app = FastAPI()
@@ -98,7 +98,7 @@ async def generate_audiobook(request: AudiobookRequest, background_tasks: Backgr
     for segment in segments:
         audio_blob = call_openai_api(segment, request.api_key, request.voice)
         audio_blobs.append(audio_blob)
-        time.sleep(delay_between_calls)  # Respect rate limits
+        await asyncio.sleep(delay_between_calls)  # Respect rate limits
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
         output_path = temp_file.name
@@ -148,7 +148,7 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File
     for segment in segments:
         audio_blob = call_openai_api(segment, api_key, voice)
         audio_blobs.append(audio_blob)
-        time.sleep(delay_between_calls)  # Respect rate limits
+        await asyncio.sleep(delay_between_calls)  # Respect rate limits
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
         output_path = temp_file.name
