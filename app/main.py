@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, Response
+from fastapi import FastAPI, Request, HTTPException, Response, BackgroundTasks
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
@@ -89,7 +89,7 @@ def merge_audio_files(audio_files: List[bytes], output_path: str) -> str:
     return output_path
 
 @app.post("/generate-audiobook")
-async def generate_audiobook(request: AudiobookRequest):
+async def generate_audiobook(request: AudiobookRequest, background_tasks: BackgroundTasks):
     segments = split_text_into_segments(request.text)
     audio_blobs = []
     rate_limit_per_minute = 50
@@ -104,7 +104,8 @@ async def generate_audiobook(request: AudiobookRequest):
         output_path = temp_file.name
         merge_audio_files(audio_blobs, output_path)
 
-    return FileResponse(output_path, media_type="audio/wav", filename="merged_audio.wav", headers={"Content-Disposition": "attachment; filename=merged_audio.wav"})
+    background_tasks.add_task(os.remove, output_path)
+    return FileResponse(output_path, media_type="audio/wav", filename="merged_audio.wav", headers={"Content-Disposition": "attachment; filename=merged_audio.wav"}, background=background_tasks)
 
 from fastapi import UploadFile, File, Form
 import ebooklib
@@ -126,7 +127,7 @@ def extract_text_from_pdf(file_content: bytes) -> str:
     return extract_text(io.BytesIO(file_content))
 
 @app.post("/upload-file")
-async def upload_file(file: UploadFile = File(...), api_key: str = Form(...), voice: str = Form(...)):
+async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File(...), api_key: str = Form(...), voice: str = Form(...)):
     content = await file.read()
     text = ""
     if file.filename.endswith('.txt'):
@@ -153,4 +154,5 @@ async def upload_file(file: UploadFile = File(...), api_key: str = Form(...), vo
         output_path = temp_file.name
         merge_audio_files(audio_blobs, output_path)
 
-    return FileResponse(output_path, media_type="audio/wav", filename="merged_audio.wav", headers={"Content-Disposition": "attachment; filename=merged_audio.wav"})
+    background_tasks.add_task(os.remove, output_path)
+    return FileResponse(output_path, media_type="audio/wav", filename="merged_audio.wav", headers={"Content-Disposition": "attachment; filename=merged_audio.wav"}, background=background_tasks)
