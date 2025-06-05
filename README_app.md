@@ -13,12 +13,12 @@ The Audiobook Generator allows users to input text or upload files (text or ePub
    pip install -r requirements.txt
    ```
 
-2. **Run the Application**: Start the FastAPI server with the following command, using the absolute path to ensure the module is found:
+2. **Run the Application**: Start the FastAPI server with the following command from the project directory:
    ```
-   uvicorn audiobook_generator.app.main:app --reload
+   uvicorn app.main:app --reload
    ```
 
-   This will run the application on `http://127.0.0.1:8000`. The `--reload` flag enables auto-reload during development. You can run this command from any directory as it uses the full module path.
+   This will run the application on `http://127.0.0.1:8000`. The `--reload` flag enables auto-reload during development.
 
 ## Usage
 
