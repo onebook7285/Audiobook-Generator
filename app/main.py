@@ -69,8 +69,8 @@ def call_openai_api(segment: str, api_key: str, voice: str) -> bytes:
             voice=voice,
             input=segment
         )
-        # The response object has a read() method to get the audio bytes
-        audio_bytes = response.read()
+        # The response content property returns the audio bytes directly
+        audio_bytes = response.content
         return audio_bytes
     except openai.APIError as e:
         # Handle OpenAI API errors more specifically
