@@ -26,6 +26,7 @@ The Audiobook Generator allows users to input text or upload files (text or ePub
 - Enter your OpenAI API key.
 - Input text or upload a `.txt` or `.epub` file.
 - Select a voice for the audiobook.
+- Optionally set a maximum duration per output file in seconds. Audio exceeding this limit will be split and provided as a ZIP archive.
 - Click "Generate Audiobook" to create and download the audio file.
 
 ## Project Structure
