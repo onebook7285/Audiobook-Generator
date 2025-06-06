@@ -1,4 +1,4 @@
-document.getElementById('generate-audiobook').addEventListener('click', generateAudiobook);
+document.getElementById('generate-audiobook').addEventListener('click', generateAudiobookServer);
 
 console.log("Version 0.9.1");
 
@@ -76,6 +76,42 @@ function triggerDownload(blob, filename) {
     a.href = url;
     a.download = filename;
     a.click();
+}
+
+async function generateAudiobookServer() {
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    const apiKey = document.getElementById('api-key').value;
+    const voice = document.getElementById('voice').value;
+    const maxDuration = document.getElementById('max-duration').value;
+
+    let response;
+    if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', apiKey);
+        formData.append('voice', voice);
+        if (maxDuration) formData.append('max_duration', maxDuration);
+        response = await fetch('/upload-file', { method: 'POST', body: formData });
+    } else {
+        const text = document.getElementById('text-input').value;
+        response = await fetch('/generate-audiobook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, api_key: apiKey, voice: voice, max_duration: maxDuration ? parseInt(maxDuration) : null })
+        });
+    }
+
+    if (!response.ok) {
+        document.getElementById('error-indicator').style.display = 'block';
+        return;
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    const filename = match ? match[1] : (response.headers.get('Content-Type') === 'application/zip' ? 'audiobook_parts.zip' : 'audiobook.wav');
+    triggerDownload(blob, filename);
 }
 
 
